@@ -1,0 +1,313 @@
+From 04405348446d93b7ad5f2da5753049a5958b9695 Mon Sep 17 00:00:00 2001
+From: dzhang <daniel.zhang@aviatnet.com>
+Date: Sat, 16 Jan 2021 12:06:34 +1300
+Subject: [PATCH] Add uart and Led tests and u-boot is loaded and running
+
+---
+ board/samsung/smdkc100/lowlevel_init.S | 175 ++++++++++++++++++++++---
+ board/samsung/smdkc100/smdkc100.c      |  29 +++-
+ include/configs/smdkc100.h             |   5 +-
+ 3 files changed, 191 insertions(+), 18 deletions(-)
+
+diff --git a/board/samsung/smdkc100/lowlevel_init.S b/board/samsung/smdkc100/lowlevel_init.S
+index b6ea405198..d451ad9830 100644
+--- a/board/samsung/smdkc100/lowlevel_init.S
++++ b/board/samsung/smdkc100/lowlevel_init.S
+@@ -19,6 +19,8 @@
+ lowlevel_init:
+ 	mov	r9, lr
+ 
++#if CONFIG_SPL_BUILD
++
+ 	/* r5 has always zero */
+ 	mov	r5, #0
+ 
+@@ -58,12 +60,15 @@ lowlevel_init:
+ 	str	r5, [r1, #0xf00]			@INTADDRESS
+ 	str	r5, [r2, #0xf00]			@INTADDRESS
+ 	str	r5, [r3, #0xf00]			@INTADDRESS
+-	
++
+ 	/* for CLOCK */
+ 	bl system_clock_init
+-	
+-	/* for DDR */
+-	bl system_ddr_init
++
++  /* for DDR */
++  bl system_ddr_init
++
++  /* copy image */
++  bl copy_bl2_to_ram 
+ 
+ 	/* for UART */
+ 	bl uart_asm_init
+@@ -71,9 +76,131 @@ lowlevel_init:
+ 	/* for TZPC */
+ 	bl tzpc_asm_init
+ 
+-1:
+-	mov	lr, r9
+-	mov	pc, lr
++#else
++
++  /* led test with 2 light on */
++  bl led_test
++
++  /* uart test output "Hello wo" */
++  bl uart_test
++
++  /* led test with 1 light on */
++  bl led_test1
++  bl uart_test
++  bl uart_test
++
++#endif
++  mov lr, r9
++  mov pc, lr
++
++#ifndef CONFIG_SPL_BUILD
++
++/*
++ * led_test: test led
++ */
++led_test:
++#mov r7, lr
++
++  ldr r0,=0x30000000
++  ldr r1, =0x3
++  str r1, [r0]
++
++  ldr r2, [r0]
++
++  ldr r1, =0xe0200280
++  ldr r0, =0x00001111
++  str r0, [r1]
++
++  str r2, [r1, #0x4]
++
++# mov lr, r7
++  mov pc, lr
++
++led_test1:
++# mov r7, lr
++
++  ldr r0,=0x31000000
++  ldr r1, =0x7
++  str r1, [r0]
++
++  ldr r2, [r0]
++
++  ldr r1, =0xe0200280
++  ldr r0, =0x00001111
++  str r0, [r1]
++
++  str r2, [r1, #0x4]
++
++# mov lr, r7
++  mov pc, lr
++
++/*
++ * uart_test : output "Hello wo"
++ */
++uart_test:
++# mov r7, lr
++
++  ldr r8, =0xe2900000
++  ldr r1, ='H'
++  str r1, [r8, #0x20]
++
++  mov	r2, #0x100000
++1:	subs	r2, r2, #1
++	bne	1b
++
++  ldr r1, ='e'
++  str r1, [r8, #0x20]
++
++	mov	r2, #0x100000
++2:	subs	r2, r2, #1
++	bne	2b
++
++  ldr r1, ='l'
++  str r1, [r8, #0x20]
++
++	mov	r2, #0x100000
++3:	subs	r2, r2, #1
++	bne	3b
++
++  ldr r1, ='l'
++  str r1, [r8, #0x20]
++
++	mov	r2, #0x100000
++4:	subs	r2, r2, #1
++	bne	4b
++
++  ldr r1, ='o'
++  str r1, [r8, #0x20]
++
++	mov	r2, #0x100000
++5:	subs	r2, r2, #1
++	bne	5b
++
++  ldr r1, =' '
++  str r1, [r8, #0x20]
++
++	mov	r2, #0x100000
++6:	subs	r2, r2, #1
++	bne	6b
++
++  ldr r1, ='w'
++  str r1, [r8, #0x20]
++
++	mov	r2, #0x100000
++7:	subs	r2, r2, #1
++	bne	7b
++
++  ldr r1, ='o'
++  str r1, [r8, #0x20]
++
++	mov	r2, #0x100000
++8:	subs	r2, r2, #1
++	bne	8b
++
++# mov lr, r7
++  mov pc, lr
++
++#else
+ 
+ /*
+  * system_clock_init: Initialize core clock and bus clock.
+@@ -118,8 +245,8 @@ system_clock_init:
+ 
+ 	/* wait at least 200us to stablize all clock */
+ 	mov	r2, #0x100000
+-1:	subs	r2, r2, #1
+-	bne	1b
++9:	subs	r2, r2, #1
++	bne	9b
+ 
+ 	mov	pc, lr
+ 
+@@ -144,8 +271,8 @@ system_ddr_init:
+ 
+ 	/* wait at least 200us to stablize all clock */
+ 	mov	r2, #0x100000
+-1:	subs	r2, r2, #1
+-	bne	1b
++10:	subs	r2, r2, #1
++	bne	10b
+ 	
+ 	/* CONCONTROL */
+ 	ldr	r1, =0x0FFF2350
+@@ -231,8 +358,8 @@ system_ddr_init:
+ 	
+ /* wait at least 200us to stablize all clock */
+ 	mov	r2, #0x100000
+-1:	subs	r2, r2, #1
+-	bne	1b
++11:	subs	r2, r2, #1
++	bne	11b
+ 	
+ 	/* CONCONTROL */
+ 	ldr	r1, =0x0FFF2350
+@@ -313,7 +440,23 @@ uart_asm_init:
+ 	ldr	r1, =0x00022222
+ 	str	r1, [r0, #0x20]			@ GPA1_CON
+ 
+-	mov	pc, lr
++  ldr r8, =0xe2900000
++  mov r0, r8
++  ldr r1, =0x1
++  str r1, [r0, #0x8]
++  ldr r1, =0
++  str r1, [r0, #0xc]
++  ldr r1, =0x3
++  str r1, [r0, #0x0]
++  ldr r1, =0x5
++  str r1, [r0, #0x4]
++
++  ldr r1, =35
++  str r1, [r0, #0x28]
++  ldr r1, =0x1
++  str r1, [r0, #0x2c]
++
++  mov pc, lr
+ 
+ /*
+  * tzpc_asm_init: Initialize TZPC
+@@ -341,4 +484,6 @@ tzpc_asm_init:
+ 	ldr	r0, =0xE1C00000
+ 	str	r1, [r0, #0x804]
+ 
+-	mov	pc, lr
++  mov pc, lr
++
++#endif
+diff --git a/board/samsung/smdkc100/smdkc100.c b/board/samsung/smdkc100/smdkc100.c
+index c799cf5047..8d0f6aca72 100644
+--- a/board/samsung/smdkc100/smdkc100.c
++++ b/board/samsung/smdkc100/smdkc100.c
+@@ -20,9 +20,36 @@ DECLARE_GLOBAL_DATA_PTR;
+ 
+ void board_init_f(ulong bootflag)
+ {
+-	
++    __attribute__((noreturn)) void (*uboot)(void);
++    uboot = (void *)0x20000000;
++    (*uboot)();
+ }
+ 
++void copy_bl2_to_ram(void)
++{
++/*
++** ch:  閫氶亾
++** sb:  璧峰鍧?
++** bs:  鍧楀ぇ灏?
++** dst: 鐩殑鍦?
++** i:   鏄惁鍒濆鍖?
++*/
++#define CopySDMMCtoMem(ch, sb, bs, dst, i) \
++        (((u8(*)(int, u32, unsigned short, u32*, u8))\
++        (*((u32 *)0xD0037F98)))(ch, sb, bs, dst, i))
++
++    u32 bl2Size = 500 * 1024 / 512;       // 250K
++    //u32 kernelSize = 2 * 1024 * 1024 / 512;  // 2M
++    //u32 rootfsSize = 2 * 1024 * 1024 / 512;  // 2M
++
++    u32 V210_SDMMC_BASE = *(volatile u32 *)(0xD0037488);    // V210_SDMMC_BASE
++
++    if (V210_SDMMC_BASE == 0xEB000000) {
++        CopySDMMCtoMem(0, 32, bl2Size, (u32 *)0x20000000, 0);
++        //CopySDMMCtoMem(0, 32 + bl2Size, kernelSize, (u32 *)CONFIG_SYS_SDRAM_KERNEL, 0);
++        //CopySDMMCtoMem(0, 32 + bl2Size + kernelSize, rootfsSize, (u32 *)CONFIG_SYS_SDRAM_ROOTFS, 0);
++    }
++}
+ #endif
+ 
+ /*
+diff --git a/include/configs/smdkc100.h b/include/configs/smdkc100.h
+index 77773cdeaa..f6056832d6 100644
+--- a/include/configs/smdkc100.h
++++ b/include/configs/smdkc100.h
+@@ -25,7 +25,7 @@
+ #define CONFIG_SYS_CLK_FREQ		12000000
+ 
+ /* DRAM Base */
+-#define CONFIG_SYS_SDRAM_BASE		0x30000000
++#define CONFIG_SYS_SDRAM_BASE		0x20000000
+ 
+ /* Text Base */
+ 
+@@ -138,7 +138,8 @@
+ #define CONFIG_SAMSUNG_ONENAND		1
+ #define CONFIG_SYS_ONENAND_BASE		0xE7100000
+ 
+-#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_LOAD_ADDR - 0x1000000)
++//#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_LOAD_ADDR - 0x1000000)
++#define CONFIG_SYS_INIT_SP_ADDR 0x40000000
+ 
+ /*
+  * Ethernet Contoller driver
+-- 
+2.30.0
+

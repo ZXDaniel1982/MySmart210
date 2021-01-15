@@ -21,6 +21,10 @@ u-boot:
 	make -C $(UBOOT_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) smdkc100_defconfig
 	make -C $(UBOOT_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE)
 
+u-boot-install:
+	sudo dd iflag=sync oflag=sync if=../u-boot/spl/smdkc100-spl.bin of=/dev/mmcblk0 seek=1
+	sudo dd iflag=sync oflag=sync if=../u-boot/u-boot.bin of=/dev/mmcblk0 seek=32
+
 u-boot-clean:
 	make -C $(UBOOT_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
 
