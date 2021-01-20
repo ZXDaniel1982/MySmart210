@@ -10,10 +10,10 @@ prepare: prepare-uboot prepare-linux prepare-busybox
 
 prepare-uboot:
 	git clone git@github.com:u-boot/u-boot.git $(UBOOT_DIR)
-	
+
 prepare-linux:
 	git clone git@github.com:torvalds/linux.git $(LINUX_DIR)
-	
+
 prepare-busybox:
 	git clone git://busybox.net/busybox.git $(BUSYBOX_DIR)
 
@@ -29,10 +29,18 @@ u-boot-clean:
 	make -C $(UBOOT_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
 
 linux:
-	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) smdkc100_defconfig
+	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) smart210_defconfig
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE)
-	
+
+linux-install:
+	sudo dd iflag=sync oflag=sync if=../linux/arch/arm/boot/uImage of=/dev/mmcblk0 seek=1032
+
 linux-clean:
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
 
 busybox:
+	make -C $(BUSYBOX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE)
+	make -C $(BUSYBOX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) install
+
+busybox-clean:
+	make -C $(BUSYBOX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
