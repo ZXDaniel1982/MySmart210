@@ -10,7 +10,7 @@
 
     images {
         kernel@smart210 {
-            description = "Unify(TODO) Linux kernel for project-x";
+            description = "Unify(TODO) Linux kernel for smart210";
             data = /incbin/("../linux/arch/arm/boot/zImage");
             type = "kernel";
             arch = "arm";
@@ -20,14 +20,14 @@
             entry = <0x20008000>;
         };
         fdt@smart210 {
-            description = "Flattened Device Tree blob for project-x";
+            description = "Flattened Device Tree blob for smart210";
             data = /incbin/("../linux/arch/arm/boot/dts/s5pv210-smdkv210.dtb");
             type = "flat_dt";
             arch = "arm";
             compression = "none";
         };
         ramdisk@smart210 {
-            description = "Ramdisk for project-x";
+            description = "Ramdisk for smart210";
             data = /incbin/("../ramdisk/ramdisk.gz");
             type = "ramdisk";
             arch = "arm";
