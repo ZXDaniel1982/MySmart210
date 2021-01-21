@@ -2,7 +2,11 @@ BUILD_DIR=$(shell pwd)
 UBOOT_DIR=$(BUILD_DIR)/../u-boot
 LINUX_DIR=$(BUILD_DIR)/../linux
 BUSYBOX_DIR=$(BUILD_DIR)/../busybox
+ROOTFS_DIR=$(BUILD_DIR)/../rootfs
+FSIMG_DIR=$(BUILD_DIR)/../ramdisk
 CROSS_COMPILE=$(BUILD_DIR)/../gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
+
+SD_DEVICE=/dev/mmcblk0
 
 all: u-boot linux busybox
 
@@ -27,8 +31,8 @@ u-boot:
 	make -C $(UBOOT_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE)
 
 u-boot-install:
-	sudo dd iflag=sync oflag=sync if=../u-boot/spl/smdkc100-spl.bin of=/dev/mmcblk0 seek=1
-	sudo dd iflag=sync oflag=sync if=../u-boot/u-boot.bin of=/dev/mmcblk0 seek=32
+	sudo dd iflag=sync oflag=sync if=$(UBOOT_DIR)/spl/smdkc100-spl.bin of=$(SD_DEVICE) seek=1
+	sudo dd iflag=sync oflag=sync if=$(UBOOT_DIR)/u-boot.bin of=$(SD_DEVICE) seek=32
 
 u-boot-clean:
 	make -C $(UBOOT_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
@@ -38,7 +42,7 @@ linux:
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE)
 
 linux-install:
-	sudo dd iflag=sync oflag=sync if=../linux/arch/arm/boot/uImage of=/dev/mmcblk0 seek=1032
+	sudo dd iflag=sync oflag=sync if=$(LINUX_DIR)/arch/arm/boot/uImage of=$(SD_DEVICE) seek=1032
 
 linux-clean:
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
@@ -49,3 +53,13 @@ busybox:
 
 busybox-clean:
 	make -C $(BUSYBOX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
+
+rootfs:
+	mkdir -p ${FSIMG_DIR}
+	genext2fs -b 4096 -d ${ROOTFS_DIR} ${FSIMG_DIR}/ramdisk
+	gzip -9 -f ${FSIMG_DIR}/ramdisk
+	${UBOOT_DIR}/tools/mkimage -n smart210 -A arm -O linux -T ramdisk -C gzip -a 0x21000000 -e 0x21000000 -d ${FSIMG_DIR}/ramdisk.gz ${FSIMG_DIR}/ramdisk.img
+	rm ${FSIMG_DIR}/ramdisk.gz
+
+fit_image:
+	${UBOOT_DIR}/tools/mkimage -f ./FitImage.its ./FitImage.itb

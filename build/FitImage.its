@@ -1,0 +1,50 @@
+/*
+ * U-Boot uImage source file for "smart210"
+ */
+
+/dts-v1/;
+
+/ {
+    description = "U-Boot uImage source file for smart210";
+    #address-cells = <1>;
+
+    images {
+        kernel@smart210 {
+            description = "Unify(TODO) Linux kernel for project-x";
+            data = /incbin/("../linux/arch/arm/boot/zImage");
+            type = "kernel";
+            arch = "arm";
+            os = "linux";
+            compression = "none";
+            load = <0x20008000>;
+            entry = <0x20008000>;
+        };
+        fdt@smart210 {
+            description = "Flattened Device Tree blob for project-x";
+            data = /incbin/("../linux/arch/arm/boot/dts/s5pv210-smdkv210.dtb");
+            type = "flat_dt";
+            arch = "arm";
+            compression = "none";
+        };
+        ramdisk@smart210 {
+            description = "Ramdisk for project-x";
+            data = /incbin/("../ramdisk/ramdisk.gz");
+            type = "ramdisk";
+            arch = "arm";
+            os = "linux";
+            compression = "gzip";
+            load = <0x21000000>;
+            entry = <0x21000000>;
+        };
+    };
+
+    configurations {
+        default = "conf@smart210";
+        conf@smart210 {
+            description = "Boot Linux kernel with FDT blob";
+            kernel = "kernel@smart210";
+            fdt = "fdt@smart210";
+            ramdisk = "ramdisk@smart210";
+        };
+    };
+};
