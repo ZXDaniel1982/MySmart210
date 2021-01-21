@@ -8,8 +8,10 @@ all: u-boot linux busybox
 
 prepare: prepar-gcc prepare-uboot prepare-linux prepare-busybox
 
-prepar-gcc:
-	tar -xvf ../gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf.tar.xz -C ../
+prepare-gcc:
+	wget -O ../gcc.tar.xz https://releases.linaro.org/components/toolchain/binaries/latest-7/arm-linux-gnueabihf/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf.tar.xz
+	tar -xvf ../gcc.tar.xz -C ../
+	rm ../gcc.tar.xz
 
 prepare-uboot:
 	git clone git@github.com:u-boot/u-boot.git $(UBOOT_DIR)
