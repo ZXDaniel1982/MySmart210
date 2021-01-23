@@ -43,11 +43,11 @@ u-boot-clean:
 
 linux:
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) smart210_defconfig
-	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) uImage LOADADDR=0x20008000
+	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) dtbs uImage LOADADDR=0x20008000
 
 linux-install:
 	sudo dd iflag=sync oflag=sync if=$(LINUX_DIR)/arch/arm/boot/uImage of=$(SD_DEVICE) seek=1032
-	sudo dd iflag=sync oflag=sync if=$(LINUX_DIR)/arch/arm/boot/dts/s5pv210-smdkv210.dtb seek=17416
+	sudo dd iflag=sync oflag=sync if=$(LINUX_DIR)/arch/arm/boot/dts/s5pv210-smdkv210.dtb of=$(SD_DEVICE) seek=17416
 
 linux-clean:
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
