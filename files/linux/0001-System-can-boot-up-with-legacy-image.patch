@@ -1,0 +1,346 @@
+From bcb487b7b302864eff7b5ede0188c52e7a19c133 Mon Sep 17 00:00:00 2001
+From: dzhang <daniel.zhang@aviatnet.com>
+Date: Sat, 23 Jan 2021 15:56:34 +1300
+Subject: [PATCH] System can boot up with legacy image
+
+---
+ arch/arm/boot/dts/s5pv210-smdkv210.dts | 148 +------------------------
+ arch/arm/configs/smart210_defconfig    | 134 ++++++++++++++++++++++
+ 2 files changed, 139 insertions(+), 143 deletions(-)
+ create mode 100644 arch/arm/configs/smart210_defconfig
+
+diff --git a/arch/arm/boot/dts/s5pv210-smdkv210.dts b/arch/arm/boot/dts/s5pv210-smdkv210.dts
+index fbae768d65e2..09f944212613 100644
+--- a/arch/arm/boot/dts/s5pv210-smdkv210.dts
++++ b/arch/arm/boot/dts/s5pv210-smdkv210.dts
+@@ -24,119 +24,24 @@ / {
+ 	compatible = "yic,smdkv210", "samsung,s5pv210";
+ 
+ 	chosen {
+-		bootargs = "console=ttySAC0,115200n8 root=/dev/mmcblk0p1 rw rootwait ignore_loglevel earlyprintk";
++		bootargs = "console=ttySAC0,115200n8 root=/dev/ram0 rw rootwait earlyprintk rdinit=/linuxrc";
++		linux,stdout-path = &uart0;
+ 	};
+ 
+ 	memory@20000000 {
+ 		device_type = "memory";
+ 		reg = <0x20000000 0x40000000>;
+ 	};
++};
+ 
+-	pmic_ap_clk: clock-0 {
+-		/* Workaround for missing PMIC and its clock */
+-		compatible = "fixed-clock";
+-		#clock-cells = <0>;
+-		clock-frequency = <32768>;
+-	};
+-
+-	ethernet@a8000000 {
+-		compatible = "davicom,dm9000";
+-		reg = <0xA8000000 0x2 0xA8000002 0x2>;
+-		interrupt-parent = <&gph1>;
+-		interrupts = <1 IRQ_TYPE_LEVEL_HIGH>;
+-		local-mac-address = [00 00 de ad be ef];
+-		davicom,no-eeprom;
+-	};
+-
+-	backlight {
+-		compatible = "pwm-backlight";
+-		pwms = <&pwm 3 5000000 0>;
+-		brightness-levels = <0 4 8 16 32 64 128 255>;
+-		default-brightness-level = <6>;
+-		pinctrl-names = "default";
+-		pinctrl-0 = <&pwm3_out>;
+-	};
++&xxti {
++  clock-frequency = <24000000>;
+ };
+ 
+ &xusbxti {
+ 	clock-frequency = <24000000>;
+ };
+ 
+-&keypad {
+-	linux,input-no-autorepeat;
+-	wakeup-source;
+-	samsung,keypad-num-rows = <8>;
+-	samsung,keypad-num-columns = <8>;
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&keypad_row0>, <&keypad_row1>, <&keypad_row2>,
+-			<&keypad_row3>, <&keypad_row4>, <&keypad_row5>,
+-			<&keypad_row6>, <&keypad_row7>,
+-			<&keypad_col0>, <&keypad_col1>, <&keypad_col2>,
+-			<&keypad_col3>, <&keypad_col4>, <&keypad_col5>,
+-			<&keypad_col6>, <&keypad_col7>;
+-	status = "okay";
+-
+-	key-1 {
+-		keypad,row = <0>;
+-		keypad,column = <3>;
+-		linux,code = <KEY_1>;
+-	};
+-
+-	key-2 {
+-		keypad,row = <0>;
+-		keypad,column = <4>;
+-		linux,code = <KEY_2>;
+-	};
+-
+-	key-3 {
+-		keypad,row = <0>;
+-		keypad,column = <5>;
+-		linux,code = <KEY_3>;
+-	};
+-
+-	key-4 {
+-		keypad,row = <0>;
+-		keypad,column = <6>;
+-		linux,code = <KEY_4>;
+-	};
+-
+-	key-5 {
+-		keypad,row = <0
+-		>;
+-		keypad,column = <7>;
+-		linux,code = <KEY_5>;
+-	};
+-
+-	key-6 {
+-		keypad,row = <1>;
+-		keypad,column = <3>;
+-		linux,code = <KEY_A>;
+-	};
+-	key-7 {
+-		keypad,row = <1>;
+-		keypad,column = <4>;
+-		linux,code = <KEY_B>;
+-	};
+-
+-	key-8 {
+-		keypad,row = <1>;
+-		keypad,column = <5>;
+-		linux,code = <KEY_C>;
+-	};
+-
+-	key-9 {
+-		keypad,row = <1>;
+-		keypad,column = <6>;
+-		linux,code = <KEY_D>;
+-	};
+-
+-	key-10 {
+-		keypad,row = <1>;
+-		keypad,column = <7>;
+-		linux,code = <KEY_E>;
+-	};
+-};
+-
+ &uart0 {
+ 	status = "okay";
+ };
+@@ -153,12 +58,6 @@ &uart3 {
+ 	status = "okay";
+ };
+ 
+-&rtc {
+-	status = "okay";
+-	clocks = <&clocks CLK_RTC>, <&pmic_ap_clk>;
+-	clock-names = "rtc", "rtc_src";
+-};
+-
+ &sdhci0 {
+ 	bus-width = <4>;
+ 	pinctrl-0 = <&sd0_clk &sd0_cmd &sd0_cd &sd0_bus1 &sd0_bus4>;
+@@ -196,49 +95,12 @@ &usbphy {
+ 	status = "okay";
+ };
+ 
+-&fimd {
+-	pinctrl-0 = <&lcd_clk &lcd_data24>;
+-	pinctrl-names = "default";
+-	status = "okay";
+-
+-	display-timings {
+-		native-mode = <&timing0>;
+-
+-		timing0: timing {
+-			/* 800x480@60Hz */
+-			clock-frequency = <24373920>;
+-			hactive = <800>;
+-			vactive = <480>;
+-			hfront-porch = <8>;
+-			hback-porch = <13>;
+-			hsync-len = <3>;
+-			vback-porch = <7>;
+-			vfront-porch = <5>;
+-			vsync-len = <1>;
+-			hsync-active = <0>;
+-			vsync-active = <0>;
+-			de-active = <1>;
+-			pixelclk-active = <1>;
+-		};
+-	};
+-};
+-
+ &pwm {
+ 	samsung,pwm-outputs = <3>;
+ };
+ 
+ &i2c0 {
+ 	status = "okay";
+-
+-	audio-codec@1b {
+-		compatible = "wlf,wm8580";
+-		reg = <0x1b>;
+-	};
+-
+-	eeprom@50 {
+-		compatible = "atmel,24c08";
+-		reg = <0x50>;
+-	};
+ };
+ 
+ &i2s0 {
+diff --git a/arch/arm/configs/smart210_defconfig b/arch/arm/configs/smart210_defconfig
+new file mode 100644
+index 000000000000..72a2ded4c409
+--- /dev/null
++++ b/arch/arm/configs/smart210_defconfig
+@@ -0,0 +1,134 @@
++CONFIG_SYSVIPC=y
++CONFIG_NO_HZ=y
++CONFIG_HIGH_RES_TIMERS=y
++CONFIG_PREEMPT=y
++CONFIG_CGROUPS=y
++CONFIG_SYSFS_DEPRECATED=y
++CONFIG_SYSFS_DEPRECATED_V2=y
++CONFIG_BLK_DEV_INITRD=y
++CONFIG_KALLSYMS_ALL=y
++CONFIG_ARCH_S5PV210=y
++CONFIG_MACH_SMDKC110=y
++CONFIG_MACH_SMDKC100=y
++CONFIG_MACH_SMDKV210=y
++CONFIG_S3C_LOWLEVEL_UART_PORT=0
++CONFIG_VMSPLIT_2G=y
++CONFIG_ARM_APPENDED_DTB=y
++CONFIG_CMDLINE="root=/dev/ram0 rw console=ttySAC1,115200 init=/linuxrc"
++CONFIG_CPU_FREQ=y
++CONFIG_CPU_FREQ_STAT=y
++CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND=y
++CONFIG_CPU_FREQ_GOV_POWERSAVE=m
++CONFIG_CPU_FREQ_GOV_USERSPACE=m
++CONFIG_CPU_FREQ_GOV_CONSERVATIVE=m
++CONFIG_VFP=y
++CONFIG_NEON=y
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
++# CONFIG_BLK_DEV_BSG is not set
++CONFIG_PARTITION_ADVANCED=y
++CONFIG_BSD_DISKLABEL=y
++CONFIG_SOLARIS_X86_PARTITION=y
++CONFIG_NET=y
++CONFIG_PACKET=y
++CONFIG_UNIX=y
++CONFIG_INET=y
++CONFIG_IP_PNP=y
++CONFIG_IP_PNP_DHCP=y
++CONFIG_IP_PNP_BOOTP=y
++CONFIG_IP_PNP_RARP=y
++CONFIG_BT=m
++CONFIG_BT_RFCOMM=y
++CONFIG_BT_BNEP=y
++CONFIG_BT_HCIUART=m
++CONFIG_BT_HCIUART_BCM=y
++CONFIG_CFG80211=m
++CONFIG_MAC80211=m
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
++CONFIG_BLK_DEV_LOOP=y
++CONFIG_BLK_DEV_RAM=y
++CONFIG_BLK_DEV_RAM_SIZE=8192
++CONFIG_SCSI=y
++CONFIG_BLK_DEV_SD=y
++CONFIG_CHR_DEV_SG=y
++CONFIG_NETDEVICES=y
++CONFIG_BRCMFMAC=m
++CONFIG_INPUT_EVDEV=y
++CONFIG_KEYBOARD_GPIO=y
++# CONFIG_INPUT_MOUSE is not set
++CONFIG_INPUT_TOUCHSCREEN=y
++CONFIG_TOUCHSCREEN_ATMEL_MXT=m
++CONFIG_INPUT_MISC=y
++CONFIG_INPUT_PWM_VIBRA=m
++CONFIG_SERIAL_8250=y
++CONFIG_SERIAL_SAMSUNG=y
++CONFIG_SERIAL_SAMSUNG_CONSOLE=y
++CONFIG_SERIAL_DEV_BUS=y
++CONFIG_HW_RANDOM=y
++CONFIG_I2C_GPIO=y
++CONFIG_I2C_S3C2410=y
++CONFIG_POWER_RESET=y
++CONFIG_POWER_RESET_SYSCON_POWEROFF=y
++CONFIG_POWER_SUPPLY=y
++CONFIG_BATTERY_MAX17040=y
++# CONFIG_HWMON is not set
++CONFIG_MFD_MAX8998=y
++CONFIG_REGULATOR=y
++CONFIG_REGULATOR_FIXED_VOLTAGE=y
++CONFIG_REGULATOR_MAX8998=y
++CONFIG_MEDIA_SUPPORT=m
++CONFIG_MEDIA_CAMERA_SUPPORT=y
++CONFIG_V4L_MEM2MEM_DRIVERS=y
++CONFIG_VIDEO_SAMSUNG_S5P_JPEG=m
++CONFIG_VIDEO_SAMSUNG_S5P_MFC=m
++CONFIG_DRM=y
++CONFIG_DRM_EXYNOS=y
++CONFIG_DRM_EXYNOS_FIMD=y
++CONFIG_DRM_EXYNOS_DPI=y
++CONFIG_DRM_EXYNOS_ROTATOR=y
++CONFIG_USB=y
++CONFIG_USB_OTG=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_EHCI_EXYNOS=y
++CONFIG_USB_OHCI_HCD=y
++CONFIG_USB_OHCI_EXYNOS=y
++CONFIG_USB_DWC2=y
++CONFIG_MMC=y
++CONFIG_MMC_SDHCI=y
++CONFIG_MMC_SDHCI_S3C=y
++CONFIG_MMC_SDHCI_S3C_DMA=y
++CONFIG_RTC_CLASS=y
++CONFIG_RTC_DRV_MAX8998=m
++CONFIG_DMADEVICES=y
++CONFIG_PWM=y
++CONFIG_PWM_SAMSUNG=y
++CONFIG_PHY_SAMSUNG_USB2=m
++CONFIG_PHY_S5PV210_USB2=y
++CONFIG_EXT2_FS=y
++CONFIG_EXT4_FS=y
++CONFIG_AUTOFS4_FS=y
++CONFIG_MSDOS_FS=y
++CONFIG_VFAT_FS=y
++CONFIG_TMPFS=y
++CONFIG_TMPFS_POSIX_ACL=y
++CONFIG_CRAMFS=y
++CONFIG_ROMFS_FS=y
++CONFIG_NLS_CODEPAGE_437=y
++CONFIG_NLS_ASCII=y
++CONFIG_NLS_ISO8859_1=y
++CONFIG_NLS_UTF8=y
++CONFIG_CRC_CCITT=y
++CONFIG_DEBUG_INFO=y
++CONFIG_MAGIC_SYSRQ=y
++CONFIG_DEBUG_KERNEL=y
++# CONFIG_DEBUG_PREEMPT is not set
++CONFIG_DEBUG_RT_MUTEXES=y
++CONFIG_DEBUG_SPINLOCK=y
++CONFIG_DEBUG_MUTEXES=y
++CONFIG_DEBUG_ATOMIC_SLEEP=y
++CONFIG_EARLY_PRINTK=y
++CONFIG_DEBUG_LL=y
++CONFIG_DEBUG_S3C_UART=0
++CONFIG_DEBUG_S3C_UART0=y
++CONFIG_DEBUG_USER=y
+-- 
+2.30.0
+
