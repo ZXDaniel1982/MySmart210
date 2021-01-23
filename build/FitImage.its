@@ -28,11 +28,11 @@
         };
         ramdisk@smart210 {
             description = "Ramdisk for smart210";
-            data = /incbin/("../ramdisk/ramdisk.gz");
+            data = /incbin/("/mnt/ssd/workspace/smart210-SDK/bin/ramdisk.img");
             type = "ramdisk";
             arch = "arm";
             os = "linux";
-            compression = "gzip";
+            compression = "none";
             load = <0x21000000>;
             entry = <0x21000000>;
         };

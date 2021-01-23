@@ -39,10 +39,11 @@ u-boot-clean:
 
 linux:
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) smart210_defconfig
-	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE)
+	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) uImage LOADADDR=0x20008000
 
 linux-install:
 	sudo dd iflag=sync oflag=sync if=$(LINUX_DIR)/arch/arm/boot/uImage of=$(SD_DEVICE) seek=1032
+	sudo dd iflag=sync oflag=sync if=$(LINUX_DIR)/arch/arm/boot/dts/s5pv210-smdkv210.dtb seek=17416
 
 linux-clean:
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
@@ -59,7 +60,9 @@ rootfs:
 	genext2fs -b 4096 -d ${ROOTFS_DIR} ${FSIMG_DIR}/ramdisk
 	gzip -9 -f ${FSIMG_DIR}/ramdisk
 	${UBOOT_DIR}/tools/mkimage -n smart210 -A arm -O linux -T ramdisk -C gzip -a 0x21000000 -e 0x21000000 -d ${FSIMG_DIR}/ramdisk.gz ${FSIMG_DIR}/ramdisk.img
-	rm ${FSIMG_DIR}/ramdisk.gz
+
+rootfs-install:
+	sudo dd iflag=sync oflag=sync if=${FSIMG_DIR}/ramdisk.img of=$(SD_DEVICE) seek=13320
 
 fit_image:
 	${UBOOT_DIR}/tools/mkimage -f ./FitImage.its ./FitImage.itb
