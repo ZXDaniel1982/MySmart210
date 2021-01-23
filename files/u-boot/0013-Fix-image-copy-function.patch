@@ -1,0 +1,37 @@
+From dae69eaaf0629af5b1cf8f4e5e1174f29fc6b1ee Mon Sep 17 00:00:00 2001
+From: dzhang <daniel.zhang@aviatnet.com>
+Date: Sun, 24 Jan 2021 09:32:02 +1300
+Subject: [PATCH] Fix image copy function
+
+---
+ board/samsung/smdkc100/smdkc100.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/board/samsung/smdkc100/smdkc100.c b/board/samsung/smdkc100/smdkc100.c
+index 8de346e729..b20172e074 100644
+--- a/board/samsung/smdkc100/smdkc100.c
++++ b/board/samsung/smdkc100/smdkc100.c
+@@ -38,16 +38,13 @@ void copy_bl2_to_ram(void)
+         (((u8(*)(int, u32, unsigned short, u32*, u8))\
+         (*((u32 *)0xD0037F98)))(ch, sb, bs, dst, i))
+ 
+-    u32 bl2Size = 500 * 1024 / 512;       // 250K
+-    //u32 kernelSize = 2 * 1024 * 1024 / 512;  // 2M
+-    //u32 rootfsSize = 2 * 1024 * 1024 / 512;  // 2M
+-
+     u32 V210_SDMMC_BASE = *(volatile u32 *)(0xD0037488);    // V210_SDMMC_BASE
+ 
+     if (V210_SDMMC_BASE == 0xEB000000) {
+-        CopySDMMCtoMem(0, 32, bl2Size, (u32 *)0x20000000, 0);
+-        //CopySDMMCtoMem(0, 32 + bl2Size, kernelSize, (u32 *)CONFIG_SYS_SDRAM_KERNEL, 0);
+-        //CopySDMMCtoMem(0, 32 + bl2Size + kernelSize, rootfsSize, (u32 *)CONFIG_SYS_SDRAM_ROOTFS, 0);
++        CopySDMMCtoMem(0, 32,    1000,  (u32 *)0x20000000, 0);            //  500K   u-boot
++        CopySDMMCtoMem(0, 1032,  12288, (u32 *)0x23000000, 0);            //  6M     kernel
++        CopySDMMCtoMem(0, 13320, 4096,  (u32 *)0x23500000, 0);            //  2M     ramdisk
++        CopySDMMCtoMem(0, 17416, 4096,  (u32 *)0x33000000, 0);            //  2M     dtbSize
+     }
+ }
+ #else
+-- 
+2.30.0
+
