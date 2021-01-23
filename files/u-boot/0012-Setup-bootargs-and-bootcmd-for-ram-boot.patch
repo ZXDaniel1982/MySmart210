@@ -1,0 +1,26 @@
+From 6009a500521753abe6608d618f43badbaa8c9c10 Mon Sep 17 00:00:00 2001
+From: dzhang <daniel.zhang@aviatnet.com>
+Date: Sat, 23 Jan 2021 16:21:31 +1300
+Subject: [PATCH] Setup bootargs and bootcmd for ram boot
+
+---
+ configs/smdkc100_defconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/configs/smdkc100_defconfig b/configs/smdkc100_defconfig
+index 229f181146..88f32222b1 100644
+--- a/configs/smdkc100_defconfig
++++ b/configs/smdkc100_defconfig
+@@ -10,7 +10,8 @@ CONFIG_IDENT_STRING=" for SMDKC100"
+ CONFIG_DEFAULT_DEVICE_TREE="s5pc1xx-smdkc100"
+ CONFIG_BOOTDELAY=3
+ CONFIG_USE_BOOTARGS=y
+-CONFIG_BOOTARGS="root=/dev/mtdblock5 ubi.mtd=4 rootfstype=cramfs console=ttySAC0,115200n8 mem=128M  mtdparts=s3c-onenand:256k(bootloader),128k@0x40000(params),3m@0x60000(kernel),16m@0x360000(test),-(UBI)"
++CONFIG_BOOTARGS="root=/dev/ram0 rw console=ttySAC0,115200n8 init=/linuxrc"
++CONFIG_BOOTCOMMAND="bootm 0x23000000 0x23500000 0x33000000"
+ CONFIG_HUSH_PARSER=y
+ # CONFIG_AUTO_COMPLETE is not set
+ CONFIG_SYS_PROMPT="SMDKC100 # "
+-- 
+2.30.0
+

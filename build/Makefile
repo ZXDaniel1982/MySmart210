@@ -8,7 +8,11 @@ CROSS_COMPILE=$(BUILD_DIR)/../gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabih
 
 SD_DEVICE=/dev/mmcblk0
 
-all: u-boot linux busybox
+all: u-boot linux busybox rootfs
+
+clean: u-boot-clean linux-clean busybox-clean
+
+install: u-boot-install linux-install rootfs-install
 
 prepare: prepar-gcc prepare-uboot prepare-linux prepare-busybox
 
