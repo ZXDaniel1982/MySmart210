@@ -1,0 +1,25 @@
+From 6f6aff26050e2543cb894c053bf77b482253de40 Mon Sep 17 00:00:00 2001
+From: dzhang <daniel.zhang@aviatnet.com>
+Date: Mon, 25 Jan 2021 13:37:20 +1300
+Subject: [PATCH] Do not support ramdisk in kernel
+
+---
+ arch/arm/configs/smart210_defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/configs/smart210_defconfig b/arch/arm/configs/smart210_defconfig
+index 72a2ded4c409..45d9dd9d944f 100644
+--- a/arch/arm/configs/smart210_defconfig
++++ b/arch/arm/configs/smart210_defconfig
+@@ -5,7 +5,7 @@ CONFIG_PREEMPT=y
+ CONFIG_CGROUPS=y
+ CONFIG_SYSFS_DEPRECATED=y
+ CONFIG_SYSFS_DEPRECATED_V2=y
+-CONFIG_BLK_DEV_INITRD=y
++# CONFIG_BLK_DEV_INITRD is not set
+ CONFIG_KALLSYMS_ALL=y
+ CONFIG_ARCH_S5PV210=y
+ CONFIG_MACH_SMDKC110=y
+-- 
+2.30.0
+

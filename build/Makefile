@@ -4,7 +4,8 @@ LINUX_DIR=$(BUILD_DIR)/../linux
 BUSYBOX_DIR=$(BUILD_DIR)/../busybox
 ROOTFS_DIR=$(BUILD_DIR)/../rootfs
 FSIMG_DIR=$(BUILD_DIR)/../ramdisk
-CROSS_COMPILE=$(BUILD_DIR)/../gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
+COMPILE_DIR=$(BUILD_DIR)/../gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf
+CROSS_COMPILE=$(COMPILE_DIR)/bin/arm-linux-gnueabihf-
 
 SD_DEVICE=/dev/mmcblk0
 
@@ -45,10 +46,6 @@ linux:
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) smart210_defconfig
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) dtbs uImage LOADADDR=0x20008000
 
-linux-install:
-	sudo dd iflag=sync oflag=sync if=$(LINUX_DIR)/arch/arm/boot/uImage of=$(SD_DEVICE) seek=1032
-	sudo dd iflag=sync oflag=sync if=$(LINUX_DIR)/arch/arm/boot/dts/s5pv210-smdkv210.dtb of=$(SD_DEVICE) seek=17416
-
 linux-clean:
 	make -C $(LINUX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
 
@@ -61,12 +58,19 @@ busybox-clean:
 
 rootfs:
 	mkdir -p ${FSIMG_DIR}
-	genext2fs -b 4096 -d ${ROOTFS_DIR} ${FSIMG_DIR}/ramdisk
+	genext2fs -b 1638400 -d ${ROOTFS_DIR} ${FSIMG_DIR}/ramdisk
 	gzip -9 -f ${FSIMG_DIR}/ramdisk
 	${UBOOT_DIR}/tools/mkimage -n smart210 -A arm -O linux -T ramdisk -C gzip -a 0x21000000 -e 0x21000000 -d ${FSIMG_DIR}/ramdisk.gz ${FSIMG_DIR}/ramdisk.img
 
 rootfs-install:
-	sudo dd iflag=sync oflag=sync if=${FSIMG_DIR}/ramdisk.img of=$(SD_DEVICE) seek=13320
+	cp -ra ../files/rootfs/* ../rootfs/
+	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/lib/*so* ../rootfs/lib/ -d
+	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/lib/*.a ../rootfs/lib/ -d
+	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*so* ../rootfs/usr/lib/ -d
+	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*.a ../rootfs/usr/lib/ -d
 
 fit_image:
 	${UBOOT_DIR}/tools/mkimage -f ./FitImage.its ./FitImage.itb
+
+fit-install:
+	sudo dd iflag=sync oflag=sync if=FitImage.itb of=$(SD_DEVICE) seek=1032
