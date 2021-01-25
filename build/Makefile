@@ -9,11 +9,11 @@ CROSS_COMPILE=$(COMPILE_DIR)/bin/arm-linux-gnueabihf-
 
 SD_DEVICE=/dev/mmcblk0
 
-all: u-boot linux busybox rootfs
+all: u-boot linux busybox rootfs fit_image
 
-clean: u-boot-clean linux-clean busybox-clean
+clean: u-boot-clean linux-clean busybox-clean rootfs-clean
 
-install: u-boot-install linux-install rootfs-install
+install: u-boot-install rootfs-install fit-install rootfs-sd
 
 prepare: prepar-gcc prepare-uboot prepare-linux prepare-busybox
 
@@ -56,18 +56,15 @@ busybox:
 busybox-clean:
 	make -C $(BUSYBOX_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) distclean
 
-rootfs:
-	mkdir -p ${FSIMG_DIR}
-	genext2fs -b 1638400 -d ${ROOTFS_DIR} ${FSIMG_DIR}/ramdisk
-	gzip -9 -f ${FSIMG_DIR}/ramdisk
-	${UBOOT_DIR}/tools/mkimage -n smart210 -A arm -O linux -T ramdisk -C gzip -a 0x21000000 -e 0x21000000 -d ${FSIMG_DIR}/ramdisk.gz ${FSIMG_DIR}/ramdisk.img
-
 rootfs-install:
 	cp -ra ../files/rootfs/* ../rootfs/
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/lib/*so* ../rootfs/lib/ -d
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/lib/*.a ../rootfs/lib/ -d
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*so* ../rootfs/usr/lib/ -d
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*.a ../rootfs/usr/lib/ -d
+
+rootfs-clean:
+	rm ../rootfs -rf
 
 rootfs-sd:
 	sudo mount -t ext3 /dev/mmcblk0p1 /mnt/SD
