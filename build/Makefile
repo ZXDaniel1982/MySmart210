@@ -69,6 +69,11 @@ rootfs-install:
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*so* ../rootfs/usr/lib/ -d
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*.a ../rootfs/usr/lib/ -d
 
+rootfs-sd:
+	sudo mount -t ext3 /dev/mmcblk0p1 /mnt/SD
+	sudo cp -ra ../rootfs/* /mnt/SD
+	sudo umount /dev/mmcblk0p1
+
 fit_image:
 	${UBOOT_DIR}/tools/mkimage -f ./FitImage.its ./FitImage.itb
 
