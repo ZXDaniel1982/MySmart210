@@ -1,0 +1,83 @@
+From e99f422902019b5c50c4ffd667d8238a5be354d1 Mon Sep 17 00:00:00 2001
+From: dzhang <daniel.zhang@aviatnet.com>
+Date: Wed, 10 Feb 2021 12:04:31 +1300
+Subject: [PATCH] Enable network driver
+
+---
+ board/samsung/smdkc100/smdkc100.c | 17 ++++++++---------
+ include/configs/smdkc100.h        | 13 ++++++++++++-
+ 2 files changed, 20 insertions(+), 10 deletions(-)
+
+diff --git a/board/samsung/smdkc100/smdkc100.c b/board/samsung/smdkc100/smdkc100.c
+index 4c104523fb..3269f87fab 100644
+--- a/board/samsung/smdkc100/smdkc100.c
++++ b/board/samsung/smdkc100/smdkc100.c
+@@ -58,18 +58,15 @@ void uart_test(void)
+ /*
+  * Miscellaneous platform dependent initialisations
+  */
+-static void smc9115_pre_init(void)
++static void dm9000_pre_init(void)
+ {
+ 	u32 smc_bw_conf, smc_bc_conf;
+ 
+-	/* gpio configuration GPK0CON */
+-	gpio_cfg_pin(S5PC100_GPIO_K00 + CONFIG_ENV_SROM_BANK, S5P_GPIO_FUNC(2));
+-
+ 	/* Ethernet needs bus width of 16 bits */
+-	smc_bw_conf = SMC_DATA16_WIDTH(CONFIG_ENV_SROM_BANK);
+-	smc_bc_conf = SMC_BC_TACS(0x0) | SMC_BC_TCOS(0x4) | SMC_BC_TACC(0xe)
+-			| SMC_BC_TCOH(0x1) | SMC_BC_TAH(0x4)
+-			| SMC_BC_TACP(0x6) | SMC_BC_PMC(0x0);
++	smc_bw_conf = SMC_DATA16_WIDTH(CONFIG_ENV_SROM_BANK)
++		| SMC_BYTE_ADDR_MODE(CONFIG_ENV_SROM_BANK);
++	smc_bc_conf = SMC_BC_TACS(0) | SMC_BC_TCOS(1) | SMC_BC_TACC(2)
++		| SMC_BC_TCOH(1) | SMC_BC_TAH(0) | SMC_BC_TACP(0) | SMC_BC_PMC(0);
+ 
+ 	/* Select and configure the SROMC bank */
+ 	s5p_config_sromc(CONFIG_ENV_SROM_BANK, smc_bw_conf, smc_bc_conf);
+@@ -77,7 +74,7 @@ static void smc9115_pre_init(void)
+ 
+ int board_init(void)
+ {
+-	smc9115_pre_init();
++  dm9000_pre_init();
+ 
+ 	gd->bd->bi_arch_number = MACH_TYPE_SMDKC100;
+ 	gd->bd->bi_boot_params = PHYS_SDRAM_1 + 0x100;
+@@ -113,6 +110,8 @@ int board_eth_init(struct bd_info *bis)
+ 	int rc = 0;
+ #ifdef CONFIG_SMC911X
+ 	rc = smc911x_initialize(0, CONFIG_SMC911X_BASE);
++#elif defined(CONFIG_DRIVER_DM9000)
++	rc = dm9000_initialize(bis);
+ #endif
+ 	return rc;
+ }
+diff --git a/include/configs/smdkc100.h b/include/configs/smdkc100.h
+index af37c629c6..9707dcdaf5 100644
+--- a/include/configs/smdkc100.h
++++ b/include/configs/smdkc100.h
+@@ -140,7 +140,18 @@
+  * Ethernet Contoller driver
+  */
+ #ifdef CONFIG_CMD_NET
+-#define CONFIG_ENV_SROM_BANK   3       /* Select SROM Bank-3 for Ethernet*/
++#define CONFIG_ENV_SROM_BANK   1       /* Select SROM Bank-3 for Ethernet*/
++#define CONFIG_LIB_RAND
++#define CONFIG_DRIVER_DM9000
++#define CONFIG_NET_RANDOM_ETHADDR
++#define CONFIG_DM9000_BASE              0x88000000
++#define DM9000_IO                       (CONFIG_DM9000_BASE)
++#define DM9000_DATA                     (CONFIG_DM9000_BASE + 0x4)
++#define CONFIG_CMD_PING
++#define CONFIG_IPADDR                   192.168.3.111
++#define CONFIG_SERVERIP                 192.168.3.11
++#define CONFIG_NETMASK                  255.255.255.0
++#define CONFIG_GATEWAYIP	              192.168.0.1
+ #endif /* CONFIG_CMD_NET */
+ 
+ #endif	/* __CONFIG_H */
+-- 
+2.30.0
+
