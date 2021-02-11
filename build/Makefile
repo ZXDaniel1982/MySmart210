@@ -69,6 +69,7 @@ rootfs-clean:
 
 rootfs-sd:
 	sudo mount -t ext3 /dev/mmcblk0p1 /mnt/SD
+	sudo rm -rf /mnt/SD/*
 	sudo cp -ra ../rootfs/* /mnt/SD
 	sudo umount /dev/mmcblk0p1
 
