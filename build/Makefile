@@ -58,6 +58,7 @@ busybox-clean:
 
 rootfs-install:
 	cp -ra ../files/rootfs/* ../rootfs/
+	mkdir -p ../rootfs/lib ../rootfs/usr/lib
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/lib/*so* ../rootfs/lib/ -d
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/lib/*.a ../rootfs/lib/ -d
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*so* ../rootfs/usr/lib/ -d
