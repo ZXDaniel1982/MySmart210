@@ -34,6 +34,7 @@ prepare-busybox:
 u-boot:
 	make -C $(UBOOT_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) smdkc100_defconfig
 	make -C $(UBOOT_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE)
+	make -C $(UBOOT_DIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) envtools
 
 u-boot-install:
 	sudo dd iflag=sync oflag=sync if=$(UBOOT_DIR)/spl/smdkc100-spl.bin of=$(SD_DEVICE) seek=1
@@ -63,6 +64,8 @@ rootfs-install:
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/lib/*.a ../rootfs/lib/ -d
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*so* ../rootfs/usr/lib/ -d
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*.a ../rootfs/usr/lib/ -d
+	cp $(UBOOT_DIR)/tools/env/fw_printenv ../rootfs/usr/bin/ -d
+	cp ../rootfs/usr/bin/fw_printenv ../rootfs/usr/bin/fw_setenv -d
 
 rootfs-clean:
 	rm ../rootfs -rf
