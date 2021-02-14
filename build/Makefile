@@ -9,11 +9,11 @@ CROSS_COMPILE=$(COMPILE_DIR)/bin/arm-linux-gnueabihf-
 
 SD_DEVICE=/dev/mmcblk0
 
-all: u-boot linux busybox rootfs fit_image
+all: u-boot linux busybox rootfs-install fit_image
 
 clean: u-boot-clean linux-clean busybox-clean rootfs-clean
 
-install: u-boot-install rootfs-install fit-install rootfs-sd
+install: u-boot-install fit-install rootfs-sd
 
 prepare: prepar-gcc prepare-uboot prepare-linux prepare-busybox
 
@@ -65,19 +65,27 @@ rootfs-install:
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*so* ../rootfs/usr/lib/ -d
 	cp $(COMPILE_DIR)/arm-linux-gnueabihf/libc/usr/lib/*.a ../rootfs/usr/lib/ -d
 	cp $(UBOOT_DIR)/tools/env/fw_printenv ../rootfs/usr/bin/ -d
+	cp $(UBOOT_DIR)/tools/env/fw_env.config ../rootfs/etc/ -d
 	cp ../rootfs/usr/bin/fw_printenv ../rootfs/usr/bin/fw_setenv -d
 
 rootfs-clean:
 	rm ../rootfs -rf
 
 rootfs-sd:
-	sudo mount -t ext3 /dev/mmcblk0p1 /mnt/SD
+	sudo mount -t ext4 /dev/mmcblk0p2 /mnt/SD
 	sudo rm -rf /mnt/SD/*
 	sudo cp -ra ../rootfs/* /mnt/SD
-	sudo umount /dev/mmcblk0p1
+	sudo umount /mnt/SD
+	sudo mount -t ext4 /dev/mmcblk0p3 /mnt/SD
+	sudo rm -rf /mnt/SD/*
+	sudo cp -ra ../rootfs/* /mnt/SD
+	sudo umount /mnt/SD
 
 fit_image:
 	${UBOOT_DIR}/tools/mkimage -f ./FitImage.its ./FitImage.itb
 
 fit-install:
-	sudo dd iflag=sync oflag=sync if=FitImage.itb of=$(SD_DEVICE) seek=1032
+	sudo mount -t ext4 /dev/mmcblk0p1 /mnt/SD
+	sudo rm -rf /mnt/SD/*
+	sudo cp -ra ./FitImage.itb /mnt/SD
+	sudo umount /mnt/SD
