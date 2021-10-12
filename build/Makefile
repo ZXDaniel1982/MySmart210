@@ -15,7 +15,7 @@ clean: u-boot-clean linux-clean busybox-clean rootfs-clean
 
 install: u-boot-install fit-install rootfs-sd
 
-prepare: prepar-gcc prepare-uboot prepare-linux prepare-busybox
+prepare: prepare-gcc prepare-uboot prepare-linux prepare-busybox
 
 prepare-gcc:
 	wget -O ../gcc.tar.xz https://releases.linaro.org/components/toolchain/binaries/latest-7/arm-linux-gnueabihf/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf.tar.xz
