@@ -22,12 +22,15 @@ prepare-gcc:
 	tar -xvf ../gcc.tar.xz -C ../
 	rm ../gcc.tar.xz
 
+# u-boot baseline 4c1996ce374924a226c872e26a42cfcc7bf74da2
 prepare-uboot:
 	git clone git@github.com:u-boot/u-boot.git $(UBOOT_DIR)
 
+# linux baseline fa5878760579a9feaa1de3bb2396cd23beb439ca
 prepare-linux:
 	git clone git@github.com:torvalds/linux.git $(LINUX_DIR)
 
+# busybox baseline 7c3e96d4b3d419d76f97e17d42a4401ee685b7ec
 prepare-busybox:
 	git clone git://busybox.net/busybox.git $(BUSYBOX_DIR)
 
